@@ -13,23 +13,6 @@ from core import small_ocr_model as som
 img_file_buffer = st.camera_input("Take a picture")
 
 
-def visualize(img, gray = False, title = ""):
-    
-    if gray == False:
-        #plt.figure(figsize=[5,5]) 
-        #plt.axis('off')
-        #plt.title(title)
-        #plt.imshow(img[:,:,::-1])
-        #plt.show()
-        return img[:,:,::-1]
-
-    else:
-        plt.figure(figsize=[5,5]) 
-        plt.axis('off')
-        plt.title(title)
-        plt.imshow(img, cmap = 'gray')
-
-
 if img_file_buffer is not None:
 
     # To read image file buffer with OpenCV:
