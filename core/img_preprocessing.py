@@ -126,7 +126,7 @@ def preprocessed_mini_num(num, mid_x, mid_y):
 
 
 ## PLACEHOLDER
-sudoku_img = cv2.imread('result.png')
+#sudoku_img = cv2.imread('result.png')
 
 
 def img_preprocess(sudoku_img):
