@@ -77,14 +77,16 @@ def preprocessed_mini_num(num, mid_x, mid_y):
 
     # give threshold len
     if num.shape[0] > num.shape[1]:
-        threshold_len = int(num.shape[0] * 0.45)
+        threshold_len = int(num.shape[0] * 0.43)
     else:
-        threshold_len = int(num.shape[1] * 0.45)
+        threshold_len = int(num.shape[1] * 0.43)
         
         
     #print(len(mini_contours))
     #print(len(new_mini_contour_hold))
 
+    # get the image area
+    img_area = num.shape[0] * num.shape[1]
     
 
     for c in mini_contours:
@@ -108,14 +110,17 @@ def preprocessed_mini_num(num, mid_x, mid_y):
             #print(distance)
             #print(threshold_len)
 
-            if distance >= threshold_len or area < 20:
+            # check the percentage covered by the contour
+            contour_area_covered = (area / img_area) * 100
+
+            if distance >= threshold_len or contour_area_covered <= 2:
                 #print('here huhhu')
                 #new_mini_contour_hold.append(c)
                 #num = cv2.drawContours(num, c, contourIdx=-1, color=(255,255,255), thickness=cv2.FILLED)
                 num = cv2.drawContours(num, [c], 0, (0, 0, 0), thickness=cv2.FILLED)
                 #cv2.drawContours(binary_image, [contour_coordinates], 0, (0, 0, 0), thickness=cv2.FILLED)
 
-
+  
         else:
             #print('get 76 part')
             
@@ -129,7 +134,7 @@ def preprocessed_mini_num(num, mid_x, mid_y):
 #sudoku_img = cv2.imread('result.png')
 
 
-def img_preprocess(sudoku_img):
+def img_preprocess(sudoku_img, hline_cond):
 
 
     # test to resize image
@@ -139,11 +144,11 @@ def img_preprocess(sudoku_img):
     dim = (width, height)
     
     # resize image
-    sudoku_img = cv2.resize(sudoku_img, dim, interpolation = cv2.INTER_AREA)
+    #sudoku_img = cv2.resize(sudoku_img, dim, interpolation = cv2.INTER_AREA)
 
 
     # denoising the img first
-    sudoku_img = cv2.fastNlMeansDenoisingColored(sudoku_img,None,7,7,5,15)
+    sudoku_img = cv2.fastNlMeansDenoisingColored(sudoku_img,None,3,5,12)
 
     # resize the image - to focus on the center part -> crop 10% of t,b,l,r
     x_shape = sudoku_img.shape[0]
@@ -188,22 +193,26 @@ def img_preprocess(sudoku_img):
     sudoku_img_crop_binary = cv2.erode(sudoku_img_crop_binary, kernel, iterations=1) 
 
 
+    # i think it is better to use mask than houghlines - idea for future
+    # got problem with this houghlines
     # 7. eed to remove excess line using hough lines detection
-    lines = cv2.HoughLines(sudoku_img_crop_binary, 1, np.pi / 180, threshold=180)
+    if hline_cond == True:
 
-    # Convert the detected lines to black color
-    for line in lines:
-        rho, theta = line[0]
-        a = np.cos(theta)
-        b = np.sin(theta)
-        x0 = a * rho
-        y0 = b * rho
-        x1 = int(x0 + 1000 * (-b))
-        y1 = int(y0 + 1000 * (a))
-        x2 = int(x0 - 1000 * (-b))
-        y2 = int(y0 - 1000 * (a))
-        
-        cv2.line(sudoku_img_crop_binary, (x1, y1), (x2, y2), (0, 0, 0), 2)
+        lines = cv2.HoughLines(sudoku_img_crop_binary, 1, 10 * np.pi / 180, threshold=200)
+
+        #Convert the detected lines to black color
+        for line in lines:
+            rho, theta = line[0]
+            a = np.cos(theta)
+            b = np.sin(theta)
+            x0 = a * rho
+            y0 = b * rho
+            x1 = int(x0 + 1000 * (-b))
+            y1 = int(y0 + 1000 * (a))
+            x2 = int(x0 - 1000 * (-b))
+            y2 = int(y0 - 1000 * (a))
+            
+            cv2.line(sudoku_img_crop_binary, (x1, y1), (x2, y2), (0, 0, 0), 2)
 
     return sudoku_img_crop, sudoku_img_crop_binary
 
